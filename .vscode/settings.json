@@ -1,0 +1,36 @@
+{
+  "workbench.colorTheme": "Night Owl (No Italics)",
+  "eslint.options": {
+    "configFile": "./.eslintrc.json"
+  },
+  "eslint.nodePath": "./node_modules",
+  "eslint.validate": [
+    "javascript",
+    "javascriptreact",
+    "typescript",
+    "typescriptreact"
+  ],
+  "[json, javascript, javascriptreact, typescript, typescriptreact]": {
+    "editor.tabSize": 2
+  },
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.formatOnSave": true,
+  "editor.renderWhitespace": "boundary",
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit"
+  },
+  "window.zoomLevel": 2,
+  "editor.minimap.enabled": false,
+  "typescript.updateImportsOnFileMove.enabled": "always",
+  "workbench.editorAssociations": {
+    "*.ipynb": "jupyter-notebook"
+  },
+  "javascript.updateImportsOnFileMove.enabled": "always",
+  "eslint.alwaysShowStatus": true,
+  "security.workspace.trust.untrustedFiles": "open",
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "prettier.trailingComma": "all",
+  "files.associations": {
+    ".env*": "env"
+  }
+}

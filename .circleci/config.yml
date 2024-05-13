@@ -1,0 +1,153 @@
+version: 2.1
+
+orbs:
+  heroku: circleci/node@5.0.0
+
+workflows:
+  version: 2
+  lint-and-test:
+    jobs:
+      - lint:
+          filters:
+            branches:
+              ignore:
+                - main
+      - ts-check:
+          filters:
+            branches:
+              ignore:
+                - main
+      - test-ui:
+          requires:
+            - ts-check
+            - lint
+      - migrate-testDB:
+          requires:
+            - ts-check
+            - lint
+      - test-api:
+          requires:
+            - ts-check
+            - lint
+            - migrate-testDB
+
+jobs:
+  lint:
+    docker:
+      - image: cimg/node:16.3.0
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            # Find a cache corresponding to this specific package-lock.json checksum
+            # when this file is changed, this key will fail
+            - v1-npm-deps-{{ checksum "package-lock.json" }}
+            # Find the most recently generated cache used from any branch
+            - v1-npm-deps-
+      - run:
+          name: install dependencies
+          command: npm install
+      - save_cache:
+          key: v1-npm-deps-{{ checksum "package-lock.json" }}
+          paths:
+            - node_modules
+      - run:
+          name: lint
+          command: npm run lint
+
+  ts-check:
+    docker:
+      - image: cimg/node:16.3.0
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            # Find a cache corresponding to this specific package-lock.json checksum
+            # when this file is changed, this key will fail
+            - v1-npm-deps-{{ checksum "package-lock.json" }}
+            # Find the most recently generated cache used from any branch
+            - v1-npm-deps-
+      - run:
+          name: install dependencies
+          command: npm install
+      - save_cache:
+          key: v1-npm-deps-{{ checksum "package-lock.json" }}
+          paths:
+            - node_modules
+      - run:
+          name: ts-check
+          command: npm run ts-check
+
+  migrate-testDB:
+    docker:
+      - image: cimg/node:16.3.0
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            # Find a cache corresponding to this specific package-lock.json checksum
+            # when this file is changed, this key will fail
+            - v1-npm-deps-{{ checksum "package-lock.json" }}
+            # Find the most recently generated cache used from any branch
+            - v1-npm-deps-
+      - run:
+          name: install dependencies
+          command: npm install
+      - save_cache:
+          key: v1-npm-deps-{{ checksum "package-lock.json" }}
+          paths:
+            - node_modules
+      - run:
+          name: migrate test DB
+          # migration URL needs to have a different port
+          # Reference: https://supabase.com/docs/guides/integrations/prisma
+          command: |
+            export DATABASE_URL="$DB_BASEURL:5432/postgres"
+            npm run test:db:migrate
+
+  test-api:
+    docker:
+      - image: cimg/node:16.3.0
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            # Find a cache corresponding to this specific package-lock.json checksum
+            # when this file is changed, this key will fail
+            - v1-npm-deps-{{ checksum "package-lock.json" }}
+            # Find the most recently generated cache used from any branch
+            - v1-npm-deps-
+      - run:
+          name: install dependencies
+          command: npm install
+      - save_cache:
+          key: v1-npm-deps-{{ checksum "package-lock.json" }}
+          paths:
+            - node_modules
+      - run:
+          name: API tests (Jest)
+          command: npm run test:api
+
+  test-ui:
+    docker:
+      - image: cimg/node:16.3.0
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            # Find a cache corresponding to this specific package-lock.json checksum
+            # when this file is changed, this key will fail
+            - v1-npm-deps-{{ checksum "package-lock.json" }}
+            # Find the most recently generated cache used from any branch
+            - v1-npm-deps-
+      - run:
+          name: install dependencies
+          command: npm install
+      - save_cache:
+          key: v1-npm-deps-{{ checksum "package-lock.json" }}
+          paths:
+            - node_modules
+      - run:
+          name: UI tests (Jest)
+          command: npm run test:ui
+    parallelism: 4

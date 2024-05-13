@@ -1,0 +1,29 @@
+# Keep environment variables out of version control
+.env
+.env.local
+.env.migrate
+.env.production
+.env.test.local
+
+.next
+.DS_Store
+
+public/uploads
+
+# Sentry
+.sentryclirc
+
+# ts checks
+tsconfig.tsbuildinfo
+
+.vercel
+
+# Cypress videos and screenshots
+cypress/videos/
+cypress/screenshots/
+cypress/reports
+cypress/logs/
+
+# `next export` out directory
+/out
+node_modules

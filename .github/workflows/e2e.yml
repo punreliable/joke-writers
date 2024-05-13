@@ -1,0 +1,52 @@
+# reference:
+# https://glebbahmutov.com/blog/skip-cypress-install-on-ci/
+
+name: deploy
+on: deployment_status
+jobs:
+  cypress-e2e:
+    if: github.event.deployment_status.state == 'success' && ${{ github.ref != 'refs/heads/main' }}
+    # Note: This will run regardless of jest test outcome
+    # TODO: make dependent on jest test (circleCI) outcome
+    # Note: can't use CircleCI for this test bc it can't access
+    # deployment status / deployment URL.
+    # Possibly: migrate all tests to GitHub actions
+    runs-on: ubuntu-20.04
+    # Use a Docker image with Cypress installed globally
+    # https://github.com/cypress-io/github-action#docker-image
+    # https://github.com/cypress-io/cypress-docker-images
+    container: cypress/included:9.5.0
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      # cypress is already installed with the container.
+      # need to install a few things for Cypress to work properly with these tests
+      - name: install
+        run: npm install @prisma/client @testing-library/cypress jsonwebtoken dayjs cypress-fail-on-console-error @supabase/supabase-js
+
+      - name: Run tests
+        env:
+          CYPRESS_baseUrl: ${{ github.event.deployment_status.target_url }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          CYPRESS_LOCALSTORAGE_KEY: ${{ secrets.CYPRESS_LOCALSTORAGE_KEY }}
+          AUTH0_USERNAME: ${{ secrets.AUTH0_USERNAME }}
+          AUTH0_PASSWORD: ${{ secrets.AUTH0_PASSWORD }}
+          AUTH0_DOMAIN: ${{ secrets.AUTH0_DOMAIN }}
+          AUTH0_CLIENT_ID: ${{ secrets.AUTH0_CLIENT_ID }}
+          AUTH0_CLIENT_SECRET: ${{ secrets.AUTH0_CLIENT_SECRET }}
+          AUTH0_AUDIENCE: ${{ secrets.AUTH0_AUDIENCE }}
+          AUTH0_SCOPE: ${{ secrets.AUTH0_SCOPE }}
+          REVALIDATION_SECRET: ${{ secrets.REVALIDATION_SECRET }}
+          APP_ENV: "test"
+        run: |
+          echo "Vercel unique deployment URL is ${{ github.event.deployment_status.target_url }}"
+
+          echo "Deployed commit ${{ github.sha }}"
+          export BRANCH_NAME=$(git show -s --pretty=%D HEAD | tr -s ',' '\n' | sed 's/^ //' | grep -e 'origin/' | head -1 | sed 's/\origin\///g')
+          echo "Deployed branch ${BRANCH_NAME}"
+
+          # don't run "local only" tests
+          cypress run --browser chrome --spec "cypress/integration/continuous-integration/**/*" --config "video=false" --config "screenshotOnRunFailure=false"
