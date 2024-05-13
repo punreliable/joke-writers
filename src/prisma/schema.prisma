@@ -1,0 +1,54 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Show {
+  id        Int       @id @default(autoincrement())
+  performAt DateTime
+  url       String?   @db.VarChar(255)
+  venue     Venue     @relation(fields: [venueId], references: [id])
+  venueId   Int
+  photos    Photo[]
+}
+
+model Venue {
+  id        Int      @id @default(autoincrement())
+  name      String   @db.VarChar(255) @unique
+  url       String?  @db.VarChar(255)
+  shows     Show[]
+}
+
+model Photo {
+  id            Int        @id @default(autoincrement())
+  show          Show?      @relation(fields: [showId], references: [id])
+  showId        Int?
+  imagePath     String     @db.VarChar(255)
+  photographer  String?    @db.VarChar(255)
+  description   String?    @db.VarChar(255)
+  takenAt       DateTime?
+  createdAt     DateTime   @default(now())
+}
+
+model Musician {
+  id                 Int           @id @default(autoincrement())
+  firstName          String        @db.VarChar(255)
+  lastName           String        @db.VarChar(255)
+  bio                String
+  instruments        Instrument[]
+  imagePath          String        @db.VarChar(255)
+}
+
+model Instrument {
+  id        Int         @id @default(autoincrement())
+  name      String      @db.VarChar(255) @unique
+  musicians Musician[]
+}
+
